@@ -1,6 +1,10 @@
 /**
  * CoWatch – content script (premium)
- * Injected into dopebox.to pages (including iframes).
+ * Injected into all major streaming platforms (including iframes).
+ *
+ * Supported: Netflix, YouTube, Disney+, Hulu, Amazon Prime Video,
+ * HBO Max/Max, Crunchyroll, Peacock, Paramount+, Apple TV+, Tubi,
+ * Pluto TV, Twitch, DopeBox, Plex, Vudu, Vimeo.
  *
  * Features: video sync, host-only controls, emoji reactions & picker,
  * drift correction, buffering detection, invite link, per-user colors,
@@ -123,27 +127,111 @@
   }
 
   // ═══════════════════════════════════════════
-  //  VIDEO DETECTION
+  //  PLATFORM DETECTION
   // ═══════════════════════════════════════════
 
+  const PLATFORM = (() => {
+    const h = location.hostname;
+    if (h.includes("netflix.com"))       return "netflix";
+    if (h.includes("youtube.com"))       return "youtube";
+    if (h.includes("disneyplus.com"))    return "disney";
+    if (h.includes("hulu.com"))          return "hulu";
+    if (h.includes("primevideo.com") || (h.includes("amazon.com") && location.pathname.includes("/video"))) return "prime";
+    if (h.includes("max.com") || h.includes("hbomax.com")) return "max";
+    if (h.includes("crunchyroll.com"))   return "crunchyroll";
+    if (h.includes("peacocktv.com"))     return "peacock";
+    if (h.includes("paramountplus.com")) return "paramount";
+    if (h.includes("tv.apple.com"))      return "appletv";
+    if (h.includes("tubitv.com") || h.includes("tubi.tv")) return "tubi";
+    if (h.includes("pluto.tv"))          return "pluto";
+    if (h.includes("twitch.tv"))         return "twitch";
+    if (h.includes("plex.tv"))           return "plex";
+    if (h.includes("vudu.com"))          return "vudu";
+    if (h.includes("vimeo.com"))         return "vimeo";
+    if (h.includes("dopebox.to"))        return "dopebox";
+    return "unknown";
+  })();
+
+  // ═══════════════════════════════════════════
+  //  VIDEO DETECTION (multi-platform)
+  // ═══════════════════════════════════════════
+
+  // Walk into shadow DOM trees to find <video> elements
+  function queryShadow(root, sel) {
+    const results = [];
+    for (const el of root.querySelectorAll(sel)) results.push(el);
+    for (const el of root.querySelectorAll("*")) {
+      if (el.shadowRoot) {
+        for (const inner of queryShadow(el.shadowRoot, sel)) results.push(inner);
+      }
+    }
+    return results;
+  }
+
+  // Pick the largest (most likely main-content) video from a list
+  function pickLargest(videos) {
+    if (videos.length === 0) return null;
+    if (videos.length === 1) return videos[0];
+    let best = videos[0], bestArea = 0;
+    for (const v of videos) {
+      const a = (v.videoWidth || v.clientWidth || 0) * (v.videoHeight || v.clientHeight || 0);
+      if (a > bestArea) { bestArea = a; best = v; }
+    }
+    return best;
+  }
+
   function findVideo() {
-    let v = document.querySelector("video");
+    // 1. Direct DOM (covers most platforms)
+    let videos = queryShadow(document, "video");
+    let v = pickLargest(videos);
     if (v) return v;
+
+    // 2. Same-origin iframes (DopeBox, Tubi, Pluto, etc.)
     try {
       for (const f of document.querySelectorAll("iframe")) {
         const d = f.contentDocument || f.contentWindow?.document;
-        if (d) { v = d.querySelector("video"); if (v) return v; }
+        if (d) {
+          videos = queryShadow(d, "video");
+          v = pickLargest(videos);
+          if (v) return v;
+        }
       }
-    } catch { /* cross-origin */ }
+    } catch { /* cross-origin iframe — handled by all_frames */ }
+
     return null;
   }
 
   function waitForVideo(cb) {
+    let found = false;
     let n = 0;
-    const poll = () => { const v = findVideo(); if (v) return cb(v); if (++n < 60) setTimeout(poll, 1000); };
-    poll();
-    const obs = new MutationObserver(() => { const v = findVideo(); if (v) { obs.disconnect(); cb(v); } });
+
+    const tryFind = () => {
+      if (found) return;
+      const v = findVideo();
+      if (v) { found = true; cb(v); return; }
+      if (++n < 120) setTimeout(tryFind, 1000); // 2 min patience for slow SPAs
+    };
+    tryFind();
+
+    // Mutation observer for dynamic DOM (React/SPA streaming apps)
+    const obs = new MutationObserver(() => {
+      if (found) return;
+      const v = findVideo();
+      if (v) { found = true; obs.disconnect(); cb(v); }
+    });
     obs.observe(document.body || document.documentElement, { childList: true, subtree: true });
+
+    // SPA navigation detection — re-scan on URL changes (YouTube, Netflix)
+    let lastUrl = location.href;
+    const navCheck = setInterval(() => {
+      if (location.href !== lastUrl) {
+        lastUrl = location.href; found = false; n = 0;
+        tryFind();
+      }
+    }, 1500);
+
+    // Clean up after 5 minutes
+    setTimeout(() => { obs.disconnect(); clearInterval(navCheck); }, 300000);
   }
 
   // ═══════════════════════════════════════════
@@ -809,9 +897,23 @@
   //  INIT
   // ═══════════════════════════════════════════
 
+  const PLATFORM_NAMES = {
+    netflix: "Netflix", youtube: "YouTube", disney: "Disney+", hulu: "Hulu",
+    prime: "Prime Video", max: "Max", crunchyroll: "Crunchyroll", peacock: "Peacock",
+    paramount: "Paramount+", appletv: "Apple TV+", tubi: "Tubi", pluto: "Pluto TV",
+    twitch: "Twitch", plex: "Plex", vudu: "Vudu", vimeo: "Vimeo", dopebox: "DopeBox",
+    unknown: "this site",
+  };
+
   function init() {
     buildUI();
-    waitForVideo((v) => { attachVideoListeners(v); toast("Video detected \u2013 ready to party!"); });
+    const pname = PLATFORM_NAMES[PLATFORM] || PLATFORM;
+    waitForVideo((v) => {
+      // Detach from old video if re-detected (SPA navigation)
+      if (state.video && state.video !== v) state.video = null;
+      attachVideoListeners(v);
+      toast(`Video detected on ${pname} \u2013 ready to party!`);
+    });
   }
 
   if (document.body) init(); else document.addEventListener("DOMContentLoaded", init);

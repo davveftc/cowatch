@@ -52,11 +52,14 @@ body {
 }
 .popup-btn:hover { opacity: .9; }
 
-/* Features */
+/* Features & Platforms */
 .feature-grid { display: flex; flex-wrap: wrap; gap: 5px; }
 .feature-tag {
   font-size: 10px; padding: 3px 8px; border-radius: 4px;
   background: rgba(124,58,237,.12); color: #a78bfa; border: 1px solid rgba(124,58,237,.2);
+}
+.platform-tag {
+  background: rgba(16,185,129,.1); color: #34d399; border-color: rgba(16,185,129,.2);
 }
 
 /* Instructions */
