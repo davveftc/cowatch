@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "CoWatch - Watch Party for DopeBox",
-  "version": "1.0.0",
-  "description": "Watch movies and shows together with friends on DopeBox. Synchronized playback, real-time chat, and seamless watch parties.",
+  "version": "1.1.0",
+  "description": "Watch movies and shows together with friends on DopeBox. Synchronized playback, voice/video chat, emoji reactions, and premium watch party features.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": ["*://*.dopebox.to/*"],
   "background": {

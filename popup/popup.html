@@ -10,7 +10,7 @@
   <div class="popup">
     <div class="popup-header">
       <h1>CoWatch</h1>
-      <span class="popup-version">v1.0</span>
+      <span class="popup-version">v1.1</span>
     </div>
 
     <!-- Status -->
@@ -22,6 +22,7 @@
       <div class="room-info" id="popup-room-info" style="display:none;">
         <span class="room-label">Room:</span>
         <span class="room-code" id="popup-room-code">------</span>
+        <span class="room-members" id="popup-member-count"></span>
       </div>
     </div>
 
@@ -31,6 +32,24 @@
       <div class="input-row">
         <input type="text" id="popup-server" class="popup-input" placeholder="ws://localhost:3000" />
         <button id="popup-save" class="popup-btn">Save</button>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="popup-section popup-features">
+      <label class="popup-label">Premium Features</label>
+      <div class="feature-grid">
+        <span class="feature-tag">Host Controls</span>
+        <span class="feature-tag">Emoji Reactions</span>
+        <span class="feature-tag">Drift Sync</span>
+        <span class="feature-tag">Buffer Detection</span>
+        <span class="feature-tag">Invite Links</span>
+        <span class="feature-tag">Voice/Video</span>
+        <span class="feature-tag">Chat Colors</span>
+        <span class="feature-tag">Kick/Ban</span>
+        <span class="feature-tag">Passwords</span>
+        <span class="feature-tag">Typing Status</span>
+        <span class="feature-tag">Sound Alerts</span>
       </div>
     </div>
 
@@ -44,10 +63,6 @@
         <li>Connect, create a room &amp; share the code</li>
         <li>Friends join with the same code</li>
       </ol>
-    </div>
-
-    <div class="popup-footer">
-      <a href="https://github.com" target="_blank" class="popup-link">GitHub</a>
     </div>
   </div>
 
