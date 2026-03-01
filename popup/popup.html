@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="popup.css" />
+  <title>CoWatch</title>
+</head>
+<body>
+  <div class="popup">
+    <div class="popup-header">
+      <h1>CoWatch</h1>
+      <span class="popup-version">v1.0</span>
+    </div>
+
+    <!-- Status -->
+    <div class="popup-section" id="popup-status">
+      <div class="status-row">
+        <div class="status-dot" id="popup-dot"></div>
+        <span id="popup-status-text">Not in a room</span>
+      </div>
+      <div class="room-info" id="popup-room-info" style="display:none;">
+        <span class="room-label">Room:</span>
+        <span class="room-code" id="popup-room-code">------</span>
+      </div>
+    </div>
+
+    <!-- Quick settings -->
+    <div class="popup-section">
+      <label class="popup-label">Server URL</label>
+      <div class="input-row">
+        <input type="text" id="popup-server" class="popup-input" placeholder="ws://localhost:3000" />
+        <button id="popup-save" class="popup-btn">Save</button>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="popup-section popup-instructions">
+      <p><strong>How to use:</strong></p>
+      <ol>
+        <li>Start the sync server (<code>npm run server</code>)</li>
+        <li>Go to a movie/show on DopeBox</li>
+        <li>Click the <strong>CW</strong> button on the page</li>
+        <li>Connect, create a room &amp; share the code</li>
+        <li>Friends join with the same code</li>
+      </ol>
+    </div>
+
+    <div class="popup-footer">
+      <a href="https://github.com" target="_blank" class="popup-link">GitHub</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

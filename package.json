@@ -1,0 +1,9 @@
+{
+  "name": "cowatch",
+  "version": "1.0.0",
+  "description": "CoWatch - Watch Party Chrome Extension for DopeBox",
+  "scripts": {
+    "server": "node server/index.js",
+    "icons": "node icons/generate.js"
+  }
+}
